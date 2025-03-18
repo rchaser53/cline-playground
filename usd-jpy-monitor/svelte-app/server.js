@@ -17,7 +17,9 @@ app.get('/api/exchange-rate', async (req, res) => {
   try {
     // キャッシュを防止するためにタイムスタンプパラメータを追加
     const timestamp = new Date().getTime();
-    const url = `https://open.er-api.com/v6/latest/USD?_=${timestamp}`;
+    // CurrencyFreaks APIを使用
+    const apiKey = process.env.CURRENCY_FREAKS_API;
+    const url = `https://api.currencyfreaks.com/v2.0/rates/latest?apikey=${apiKey}&symbols=JPY&_=${timestamp}`;
     
     // キャッシュを無効化するヘッダーを設定
     const options = {
@@ -32,8 +34,18 @@ app.get('/api/exchange-rate', async (req, res) => {
     const response = await fetch(url, options);
     const data = await response.json();
     
+    // レスポンスの形式を調整して、元のAPIと同じ形式にする
+    const formattedData = {
+      base: "USD",
+      date: data.date,
+      rates: {
+        JPY: parseFloat(data.rates.JPY)
+      },
+      timestamp: Math.floor(Date.now() / 1000)
+    };
+    
     // クライアントにデータを返す
-    res.json(data);
+    res.json(formattedData);
   } catch (error) {
     console.error('為替レートの取得に失敗しました:', error);
     res.status(500).json({ error: '為替レートの取得に失敗しました' });
