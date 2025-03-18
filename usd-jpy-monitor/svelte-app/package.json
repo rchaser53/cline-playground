@@ -21,6 +21,7 @@
   "dependencies": {
     "chart.js": "^4.4.8",
     "express": "^4.21.2",
+    "node-fetch": "^3.3.2",
     "sirv-cli": "^2.0.0"
   }
 }

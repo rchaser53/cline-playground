@@ -21,7 +21,21 @@
   // 為替レートの取得
   async function fetchExchangeRate() {
     try {
-      const response = await fetch('https://open.er-api.com/v6/latest/USD');
+      // キャッシュを防止するためにタイムスタンプパラメータを追加
+      const timestamp = new Date().getTime();
+      const url = `/api/exchange-rate?_=${timestamp}`;
+      
+      // キャッシュを無効化するヘッダーを設定
+      const options = {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      };
+      
+      const response = await fetch(url, options);
       const data = await response.json();
       
       if (data && data.rates && data.rates.JPY) {
