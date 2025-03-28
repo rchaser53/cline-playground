@@ -1,11 +1,21 @@
 import React, { useEffect } from 'react';
 
-const ImageModal = ({ image, onClose }) => {
+const ImageModal = ({ image, onClose, onNext, onPrev }) => {
   useEffect(() => {
-    // ESCキーでモーダルを閉じる
+    // キーボードイベントの処理
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose();
+      switch (event.key) {
+        case 'Escape':
+          onClose();
+          break;
+        case 'ArrowRight':
+          onNext && onNext();
+          break;
+        case 'ArrowLeft':
+          onPrev && onPrev();
+          break;
+        default:
+          break;
       }
     };
 
@@ -13,7 +23,7 @@ const ImageModal = ({ image, onClose }) => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose]);
+  }, [onClose, onNext, onPrev]);
 
   if (!image) return null;
 
@@ -21,12 +31,29 @@ const ImageModal = ({ image, onClose }) => {
     <div className="modal" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <span className="close-button" onClick={onClose}>&times;</span>
+        
+        {onPrev && (
+          <button className="nav-button prev-button" onClick={onPrev}>
+            &lt;
+          </button>
+        )}
+        
+        {onNext && (
+          <button className="nav-button next-button" onClick={onNext}>
+            &gt;
+          </button>
+        )}
+        
         <img 
           id="modal-image" 
           src={image.path} 
           alt={image.name} 
         />
         <div id="modal-image-name">{image.name}</div>
+        
+        <div className="keyboard-hint">
+          ← → キーで画像を切り替え
+        </div>
       </div>
     </div>
   );

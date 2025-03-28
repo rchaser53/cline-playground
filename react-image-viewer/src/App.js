@@ -3,6 +3,7 @@ import './App.css';
 import ImageGrid from './components/ImageGrid';
 import ImageModal from './components/ImageModal';
 import SortControls from './components/SortControls';
+import SizeControls from './components/SizeControls';
 import { selectDirectory, getImages } from './utils/electron';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [thumbnailSize, setThumbnailSize] = useState(150);
   const [sortConfig, setSortConfig] = useState({
     by: 'name',
     direction: 'asc'
@@ -45,14 +47,14 @@ function App() {
     }));
   }, []);
 
+  // サムネイルサイズ変更
+  const handleSizeChange = useCallback((size) => {
+    setThumbnailSize(size);
+  }, []);
+
   // 画像クリック処理
   const handleImageClick = useCallback((image) => {
     setSelectedImage(image);
-  }, []);
-
-  // モーダルを閉じる
-  const handleCloseModal = useCallback(() => {
-    setSelectedImage(null);
   }, []);
 
   // ソートされた画像
@@ -72,6 +74,33 @@ function App() {
     });
   }, [images, sortConfig.by, sortConfig.direction]);
 
+  // モーダルを閉じる
+  const handleCloseModal = useCallback(() => {
+    setSelectedImage(null);
+  }, []);
+
+  // 次の画像に移動
+  const handleNextImage = useCallback(() => {
+    if (!selectedImage || sortedImages.length <= 1) return;
+    
+    const currentIndex = sortedImages.findIndex(img => img.path === selectedImage.path);
+    if (currentIndex === -1) return;
+    
+    const nextIndex = (currentIndex + 1) % sortedImages.length;
+    setSelectedImage(sortedImages[nextIndex]);
+  }, [selectedImage, sortedImages]);
+
+  // 前の画像に移動
+  const handlePrevImage = useCallback(() => {
+    if (!selectedImage || sortedImages.length <= 1) return;
+    
+    const currentIndex = sortedImages.findIndex(img => img.path === selectedImage.path);
+    if (currentIndex === -1) return;
+    
+    const prevIndex = (currentIndex - 1 + sortedImages.length) % sortedImages.length;
+    setSelectedImage(sortedImages[prevIndex]);
+  }, [selectedImage, sortedImages]);
+
   return (
     <div className="App">
       <header>
@@ -81,11 +110,17 @@ function App() {
             ディレクトリを選択
           </button>
           {images.length > 0 && (
-            <SortControls 
-              sortConfig={sortConfig}
-              onSortChange={handleSortChange}
-              onDirectionChange={handleDirectionChange}
-            />
+            <div className="control-options">
+              <SortControls 
+                sortConfig={sortConfig}
+                onSortChange={handleSortChange}
+                onDirectionChange={handleDirectionChange}
+              />
+              <SizeControls
+                thumbnailSize={thumbnailSize}
+                onSizeChange={handleSizeChange}
+              />
+            </div>
           )}
         </div>
         {currentDirectory && (
@@ -103,7 +138,8 @@ function App() {
         ) : (
           <ImageGrid 
             images={sortedImages} 
-            onImageClick={handleImageClick} 
+            onImageClick={handleImageClick}
+            thumbnailSize={thumbnailSize}
           />
         )}
       </main>
@@ -111,7 +147,9 @@ function App() {
       {selectedImage && (
         <ImageModal 
           image={selectedImage} 
-          onClose={handleCloseModal} 
+          onClose={handleCloseModal}
+          onNext={handleNextImage}
+          onPrev={handlePrevImage}
         />
       )}
     </div>

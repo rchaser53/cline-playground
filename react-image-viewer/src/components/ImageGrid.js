@@ -1,7 +1,7 @@
 import React from 'react';
 import ImageThumbnail from './ImageThumbnail';
 
-const ImageGrid = ({ images, onImageClick }) => {
+const ImageGrid = ({ images, onImageClick, thumbnailSize }) => {
   if (images.length === 0) {
     return (
       <div id="no-images">
@@ -10,13 +10,17 @@ const ImageGrid = ({ images, onImageClick }) => {
     );
   }
 
+  // Add data-size attribute for larger thumbnails
+  const gridSize = thumbnailSize >= 400 ? "large" : "normal";
+  
   return (
-    <div className="image-grid">
+    <div className="image-grid" data-size={gridSize}>
       {images.map((image, index) => (
         <ImageThumbnail 
           key={`${image.path}-${index}`} 
           image={image} 
-          onClick={onImageClick} 
+          onClick={onImageClick}
+          thumbnailSize={thumbnailSize}
         />
       ))}
     </div>
