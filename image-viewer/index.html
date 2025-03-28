@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>画像サムネイルビューア</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>画像サムネイルビューア</h1>
+      <div class="controls">
+        <button id="select-directory">ディレクトリを選択</button>
+        <div class="sort-controls">
+          <label for="sort-by">並び替え:</label>
+          <select id="sort-by">
+            <option value="name">名前</option>
+            <option value="lastModified">最終更新日</option>
+          </select>
+          <button id="sort-direction" title="並び替え方向を切り替え">
+            <span id="sort-icon">↓</span>
+          </button>
+        </div>
+      </div>
+      <div id="current-directory"></div>
+    </header>
+    
+    <main>
+      <div id="image-container" class="image-grid"></div>
+      <div id="no-images" class="hidden">
+        <p>選択されたディレクトリに画像がありません。</p>
+      </div>
+      <div id="loading" class="hidden">
+        <p>読み込み中...</p>
+      </div>
+    </main>
+    
+    <div id="image-modal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <img id="modal-image" src="" alt="">
+        <div id="modal-image-name"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

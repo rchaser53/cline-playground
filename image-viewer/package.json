@@ -1,0 +1,16 @@
+{
+  "name": "image-viewer",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "An Electron app to view image thumbnails from a directory",
+  "devDependencies": {
+    "electron": "^35.1.2"
+  }
+}
