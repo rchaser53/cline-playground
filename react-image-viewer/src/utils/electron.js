@@ -45,3 +45,13 @@ export const getImages = async (directoryPath) => {
     return [];
   }
 };
+
+// ディレクトリが存在するかチェック
+export const checkDirectoryExists = async (directoryPath) => {
+  try {
+    return await ipcRenderer.invoke('check-directory-exists', directoryPath);
+  } catch (error) {
+    console.error('Error checking directory:', error);
+    return false;
+  }
+};

@@ -5,15 +5,23 @@ import ImageModal from './components/ImageModal';
 import SortControls from './components/SortControls';
 import SizeControls from './components/SizeControls';
 import PositionControls from './components/PositionControls';
-import { selectDirectory, getImages } from './utils/electron';
+import { selectDirectory, getImages, checkDirectoryExists } from './utils/electron';
 
 function App() {
   const [currentDirectory, setCurrentDirectory] = useState('');
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [thumbnailSize, setThumbnailSize] = useState(150);
-  const [imagePosition, setImagePosition] = useState('center');
+  const [thumbnailSize, setThumbnailSize] = useState(() => {
+    // localStorageから前回のサムネイルサイズを取得
+    const savedSize = localStorage.getItem('thumbnailSize');
+    return savedSize ? parseInt(savedSize, 10) : 150;
+  });
+  
+  const [imagePosition, setImagePosition] = useState(() => {
+    // localStorageから前回の画像位置を取得
+    return localStorage.getItem('imagePosition') || 'center';
+  });
   const [sortConfig, setSortConfig] = useState({
     by: 'name',
     direction: 'asc'
@@ -25,8 +33,13 @@ function App() {
     try {
       const result = await selectDirectory();
       if (!result.canceled) {
-        setCurrentDirectory(result.directoryPath);
-        const imageFiles = await getImages(result.directoryPath);
+        const directoryPath = result.directoryPath;
+        setCurrentDirectory(directoryPath);
+        
+        // 選択されたディレクトリをlocalStorageに保存
+        localStorage.setItem('lastOpenedDirectory', directoryPath);
+        
+        const imageFiles = await getImages(directoryPath);
         setImages(imageFiles);
       }
     } catch (error) {
@@ -34,6 +47,33 @@ function App() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // 前回開いていたディレクトリを読み込む
+  useEffect(() => {
+    const loadLastDirectory = async () => {
+      try {
+        const lastDir = localStorage.getItem('lastOpenedDirectory');
+        if (lastDir) {
+          // ディレクトリが存在するか確認
+          const exists = await checkDirectoryExists(lastDir);
+          if (exists) {
+            setLoading(true);
+            setCurrentDirectory(lastDir);
+            const imageFiles = await getImages(lastDir);
+            setImages(imageFiles);
+            setLoading(false);
+          } else {
+            // ディレクトリが存在しない場合はlocalStorageから削除
+            localStorage.removeItem('lastOpenedDirectory');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading last directory:', error);
+      }
+    };
+
+    loadLastDirectory();
   }, []);
 
   // ソート方法変更
@@ -52,11 +92,15 @@ function App() {
   // サムネイルサイズ変更
   const handleSizeChange = useCallback((size) => {
     setThumbnailSize(size);
+    // サイズをlocalStorageに保存
+    localStorage.setItem('thumbnailSize', size.toString());
   }, []);
 
   // 画像位置変更
   const handlePositionChange = useCallback((position) => {
     setImagePosition(position);
+    // 位置をlocalStorageに保存
+    localStorage.setItem('imagePosition', position);
   }, []);
 
   // キーボードショートカット処理
@@ -64,22 +108,32 @@ function App() {
     const handleKeyDown = (event) => {
       // Command (Meta) キーが押されている場合
       if (event.metaKey) {
+        let newPosition;
+        let displayText;
+        
         switch (event.key) {
           case 't': // Command + T: 上
-            setImagePosition('top');
-            showShortcutNotification('上');
+            newPosition = 'top';
+            displayText = '上';
             break;
           case 'c': // Command + C: 中央
-            setImagePosition('center');
-            showShortcutNotification('中央');
+            newPosition = 'center';
+            displayText = '中央';
             break;
           case 'b': // Command + B: 下
-            setImagePosition('bottom');
-            showShortcutNotification('下');
+            newPosition = 'bottom';
+            displayText = '下';
             break;
           default:
-            break;
+            return;
         }
+        
+        // 位置を更新
+        setImagePosition(newPosition);
+        // localStorageに保存
+        localStorage.setItem('imagePosition', newPosition);
+        // 通知を表示
+        showShortcutNotification(displayText);
       }
     };
 

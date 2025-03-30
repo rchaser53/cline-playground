@@ -102,3 +102,16 @@ ipcMain.handle('get-images', async (event, directoryPath) => {
     return [];
   }
 });
+
+// ディレクトリが存在するかチェック
+ipcMain.handle('check-directory-exists', async (event, directoryPath) => {
+  try {
+    if (!directoryPath) return false;
+    
+    const stats = fs.statSync(directoryPath);
+    return stats.isDirectory();
+  } catch (error) {
+    // ディレクトリが存在しない場合やアクセス権限がない場合はfalseを返す
+    return false;
+  }
+});
