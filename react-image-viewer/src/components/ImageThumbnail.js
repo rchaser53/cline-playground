@@ -1,12 +1,22 @@
 import React from 'react';
 
-const ImageThumbnail = ({ image, onClick, thumbnailSize = 150 }) => {
+const ImageThumbnail = ({ image, onClick, thumbnailSize = 150, imagePosition = 'center' }) => {
   const thumbnailStyle = {
     width: '100%',
     height: `${thumbnailSize}px`,
     objectFit: 'cover',
+    objectPosition: `center ${imagePosition}`,
     maxWidth: '100%'
   };
+  
+  // Adjust object-position based on the selected position
+  if (imagePosition === 'top') {
+    thumbnailStyle.objectPosition = 'center top';
+  } else if (imagePosition === 'center') {
+    thumbnailStyle.objectPosition = 'center center';
+  } else if (imagePosition === 'bottom') {
+    thumbnailStyle.objectPosition = 'center bottom';
+  }
 
   return (
     <div className="image-item" onClick={() => onClick(image)}>

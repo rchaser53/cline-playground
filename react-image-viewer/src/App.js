@@ -4,6 +4,7 @@ import ImageGrid from './components/ImageGrid';
 import ImageModal from './components/ImageModal';
 import SortControls from './components/SortControls';
 import SizeControls from './components/SizeControls';
+import PositionControls from './components/PositionControls';
 import { selectDirectory, getImages } from './utils/electron';
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [thumbnailSize, setThumbnailSize] = useState(150);
+  const [imagePosition, setImagePosition] = useState('center');
   const [sortConfig, setSortConfig] = useState({
     by: 'name',
     direction: 'asc'
@@ -50,6 +52,11 @@ function App() {
   // サムネイルサイズ変更
   const handleSizeChange = useCallback((size) => {
     setThumbnailSize(size);
+  }, []);
+
+  // 画像位置変更
+  const handlePositionChange = useCallback((position) => {
+    setImagePosition(position);
   }, []);
 
   // 画像クリック処理
@@ -120,6 +127,10 @@ function App() {
                 thumbnailSize={thumbnailSize}
                 onSizeChange={handleSizeChange}
               />
+              <PositionControls
+                position={imagePosition}
+                onPositionChange={handlePositionChange}
+              />
             </div>
           )}
         </div>
@@ -140,6 +151,7 @@ function App() {
             images={sortedImages} 
             onImageClick={handleImageClick}
             thumbnailSize={thumbnailSize}
+            imagePosition={imagePosition}
           />
         )}
       </main>
