@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import './App.css';
 import ImageGrid from './components/ImageGrid';
 import ImageModal from './components/ImageModal';
@@ -57,6 +57,52 @@ function App() {
   // 画像位置変更
   const handlePositionChange = useCallback((position) => {
     setImagePosition(position);
+  }, []);
+
+  // キーボードショートカット処理
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Command (Meta) キーが押されている場合
+      if (event.metaKey) {
+        switch (event.key) {
+          case 't': // Command + T: 上
+            setImagePosition('top');
+            showShortcutNotification('上');
+            break;
+          case 'c': // Command + C: 中央
+            setImagePosition('center');
+            showShortcutNotification('中央');
+            break;
+          case 'b': // Command + B: 下
+            setImagePosition('bottom');
+            showShortcutNotification('下');
+            break;
+          default:
+            break;
+        }
+      }
+    };
+
+    // ショートカット通知を表示
+    const showShortcutNotification = (position) => {
+      const notification = document.createElement('div');
+      notification.className = 'shortcut-notification';
+      notification.textContent = `画像位置: ${position}`;
+      document.body.appendChild(notification);
+
+      // 2秒後に通知を消す
+      setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 500);
+      }, 1500);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   // 画像クリック処理
@@ -139,6 +185,9 @@ function App() {
             選択されたディレクトリ: {currentDirectory}
           </div>
         )}
+        <div className="keyboard-shortcuts-help">
+          ショートカット: ⌘+T (上) / ⌘+C (中央) / ⌘+B (下)
+        </div>
       </header>
 
       <main>
