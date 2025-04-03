@@ -5,7 +5,7 @@ import ImageModal from './components/ImageModal';
 import SortControls from './components/SortControls';
 import SizeControls from './components/SizeControls';
 import PositionControls from './components/PositionControls';
-import { selectDirectory, getImages, checkDirectoryExists } from './utils/electron';
+import { selectDirectory, getImages, checkDirectoryExists, deleteFile } from './utils/electron';
 
 function App() {
   const [currentDirectory, setCurrentDirectory] = useState('');
@@ -208,6 +208,25 @@ function App() {
     setSelectedImage(sortedImages[prevIndex]);
   }, [selectedImage, sortedImages]);
 
+  // 画像削除処理
+  const handleImageDelete = useCallback(async (image) => {
+    try {
+      const result = await deleteFile(image.path);
+      
+      if (result.success) {
+        // 削除に成功した場合、画像リストから削除
+        setImages(prevImages => prevImages.filter(img => img.path !== image.path));
+        
+        // 削除した画像がモーダルで表示中だった場合、モーダルを閉じる
+        if (selectedImage && selectedImage.path === image.path) {
+          setSelectedImage(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    }
+  }, [selectedImage]);
+
   return (
     <div className="App">
       <header>
@@ -253,6 +272,7 @@ function App() {
           <ImageGrid 
             images={sortedImages} 
             onImageClick={handleImageClick}
+            onImageDelete={handleImageDelete}
             thumbnailSize={thumbnailSize}
             imagePosition={imagePosition}
           />
@@ -265,6 +285,7 @@ function App() {
           onClose={handleCloseModal}
           onNext={handleNextImage}
           onPrev={handlePrevImage}
+          onDelete={handleImageDelete}
         />
       )}
     </div>

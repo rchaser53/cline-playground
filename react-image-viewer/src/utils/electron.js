@@ -21,6 +21,9 @@ try {
           { name: 'mock-image-2.png', path: 'file:///mock/directory/mock-image-2.png', lastModified: Date.now() - 86400000, lastModifiedDate: new Date(Date.now() - 86400000).toISOString() }
         ];
       }
+      if (channel === 'delete-file') {
+        return { success: true, filePath: args[0] };
+      }
       return null;
     }
   };
@@ -53,5 +56,15 @@ export const checkDirectoryExists = async (directoryPath) => {
   } catch (error) {
     console.error('Error checking directory:', error);
     return false;
+  }
+};
+
+// ファイルを削除
+export const deleteFile = async (filePath) => {
+  try {
+    return await ipcRenderer.invoke('delete-file', filePath);
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    return { success: false, error: error.message };
   }
 };

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-const ImageModal = ({ image, onClose, onNext, onPrev }) => {
+const ImageModal = ({ image, onClose, onNext, onPrev, onDelete }) => {
   useEffect(() => {
     // キーボードイベントの処理
     const handleKeyDown = (event) => {
@@ -50,6 +50,21 @@ const ImageModal = ({ image, onClose, onNext, onPrev }) => {
           alt={image.name} 
         />
         <div id="modal-image-name">{image.name}</div>
+        
+        <div className="modal-actions">
+          {onDelete && (
+            <button 
+              className="modal-delete-button" 
+              onClick={() => {
+                onDelete(image);
+                onClose();
+              }}
+              title="削除"
+            >
+              削除
+            </button>
+          )}
+        </div>
         
         <div className="keyboard-hint">
           ← → キーで画像を切り替え

@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { unlink } = require('fs/promises');
 const path = require('path');
 const fs = require('fs');
 const isDev = require('electron-is-dev');
@@ -113,5 +114,38 @@ ipcMain.handle('check-directory-exists', async (event, directoryPath) => {
   } catch (error) {
     // ディレクトリが存在しない場合やアクセス権限がない場合はfalseを返す
     return false;
+  }
+});
+
+// ファイル削除処理
+ipcMain.handle('delete-file', async (event, filePath) => {
+  try {
+    // file:// プロトコルを削除
+    if (filePath.startsWith('file://')) {
+      filePath = filePath.substring(7);
+    }
+    
+    // 削除前に確認ダイアログを表示
+    const result = await dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      title: 'ファイル削除の確認',
+      message: '本当にこのファイルを削除しますか？',
+      detail: `ファイル: ${path.basename(filePath)}`,
+      buttons: ['キャンセル', '削除'],
+      defaultId: 0,
+      cancelId: 0
+    });
+    
+    // キャンセルが選択された場合
+    if (result.response === 0) {
+      return { success: false, canceled: true };
+    }
+    
+    // ファイルを削除
+    await unlink(filePath);
+    return { success: true, filePath };
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    return { success: false, error: error.message };
   }
 });
