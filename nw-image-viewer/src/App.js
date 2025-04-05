@@ -1,11 +1,11 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import './App.css';
-import ImageGrid from './components/ImageGrid';
-import ImageModal from './components/ImageModal';
-import SortControls from './components/SortControls';
-import SizeControls from './components/SizeControls';
-import PositionControls from './components/PositionControls';
-import { selectDirectory, getImages, checkDirectoryExists, deleteFile } from './utils/nw';
+import ImageGrid from './components/ImageGrid.js';
+import ImageModal from './components/ImageModal.js';
+import SortControls from './components/SortControls.js';
+import SizeControls from './components/SizeControls.js';
+import PositionControls from './components/PositionControls.js';
+import { selectDirectory, getImages, checkDirectoryExists, deleteFile } from './utils/nw.js';
 
 // Enable Node.js integration
 if (process.versions['nw-flavor'] === 'sdk') {

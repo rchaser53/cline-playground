@@ -1,6 +1,6 @@
 // NW.js utilities for file system operations
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Get NW.js window object
 const nwWin = nw.Window.get();

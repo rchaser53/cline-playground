@@ -1,6 +1,10 @@
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default {
   entry: './src/index.js',
   output: {
     filename: 'bundle.js',
@@ -25,7 +29,10 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.js', '.jsx']
+    extensions: ['.js', '.jsx'],
+    extensionAlias: {
+      '.js': ['.js', '.jsx']
+    }
   },
   target: 'node-webkit',
   // Don't bundle Node.js built-in modules

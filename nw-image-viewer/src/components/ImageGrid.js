@@ -1,5 +1,5 @@
 import React from 'react';
-import ImageThumbnail from './ImageThumbnail';
+import ImageThumbnail from './ImageThumbnail.js';
 
 const ImageGrid = ({ images, onImageClick, onImageDelete, thumbnailSize, imagePosition }) => {
   if (images.length === 0) {

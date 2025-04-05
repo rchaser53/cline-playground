@@ -56,3 +56,7 @@ jspm_packages/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+cache
+build
+executables

@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "Image viewer application built with NW.js and React",
   "main": "index.html",
+  "type": "module",
   "scripts": {
-    "start": "nw .",
+    "start": "npx nw .",
     "build": "webpack --mode production",
-    "dev": "webpack --mode development --watch & nw ."
+    "dev": "webpack --mode development --watch & npx nw .",
+    "package": "npm run build && node build.js",
+    "create-icons": "node icons/create-icons.js",
+    "create-executables": "node create-executables-direct.js"
   },
   "window": {
     "title": "画像サムネイルビューア",
@@ -33,8 +37,6 @@
     "@babel/preset-react": "^7.23.0",
     "babel-loader": "^9.1.3",
     "css-loader": "^6.8.1",
-    "nw": "^0.83.0",
-    "nw-builder": "^4.6.3",
     "style-loader": "^3.3.3",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
