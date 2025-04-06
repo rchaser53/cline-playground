@@ -10,7 +10,10 @@
     "dev": "webpack --mode development --watch & npx nw .",
     "package": "npm run build && node build.js",
     "create-icons": "node icons/create-icons.js",
-    "create-executables": "node create-executables-direct.js"
+    "create-executables": "node create-executables-direct.js",
+    "create-executables:win": "TARGET_PLATFORM=win64,win32 node create-executables-direct.js",
+    "create-executables:mac": "TARGET_PLATFORM=osx64 node create-executables-direct.js",
+    "create-executables:linux": "TARGET_PLATFORM=linux64,linux32 node create-executables-direct.js"
   },
   "window": {
     "title": "画像サムネイルビューア",

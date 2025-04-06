@@ -57,15 +57,33 @@ This will:
 
 ```bash
 # Step 2: Create executables for multiple platforms
+
+# Build for all platforms
 npm run create-executables
+
+# Build only for Windows (32-bit and 64-bit)
+npm run create-executables:win
+
+# Build only for macOS (64-bit)
+npm run create-executables:mac
+
+# Build only for Linux (32-bit and 64-bit)
+npm run create-executables:linux
+
+# Build for specific platforms using environment variable
+TARGET_PLATFORM=win64,osx64 npm run create-executables
 ```
 
-This will create executables in the `build-output` directory for the following platforms:
-- Windows (32-bit and 64-bit)
-- macOS (64-bit)
-- Linux (32-bit and 64-bit)
+This will create executables in the `executables` directory for the specified platforms. Available platform options are:
+- `win32` - Windows 32-bit
+- `win64` - Windows 64-bit
+- `osx64` - macOS 64-bit
+- `linux32` - Linux 32-bit
+- `linux64` - Linux 64-bit
 
 The executables are created using NW.js directly, without relying on nw-builder. The script `create-executables-direct.js` handles the process of downloading NW.js binaries for each platform and packaging the application files with them.
+
+You can specify multiple platforms by separating them with commas in the `TARGET_PLATFORM` environment variable. If the environment variable is not set, executables will be built for all platforms.
 
 You can customize the build process by editing the `build.js` file.
 

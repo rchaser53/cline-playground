@@ -24,14 +24,42 @@ const execAsync = promisify(exec);
 // NW.js version to use
 const NW_VERSION = '0.70.1';
 
-// Platforms to build for
-const PLATFORMS = [
+// All available platforms
+const ALL_PLATFORMS = [
   { name: 'win32', displayName: 'Windows 32-bit', url: `https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-win-ia32.zip` },
   { name: 'win64', displayName: 'Windows 64-bit', url: `https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-win-x64.zip` },
   { name: 'osx64', displayName: 'macOS 64-bit', url: `https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-osx-x64.zip` },
   { name: 'linux32', displayName: 'Linux 32-bit', url: `https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-linux-ia32.tar.gz` },
   { name: 'linux64', displayName: 'Linux 64-bit', url: `https://dl.nwjs.io/v${NW_VERSION}/nwjs-v${NW_VERSION}-linux-x64.tar.gz` }
 ];
+
+// Get target platforms from environment variable
+const TARGET_PLATFORM = process.env.TARGET_PLATFORM;
+
+// Filter platforms based on environment variable
+let PLATFORMS = ALL_PLATFORMS;
+
+if (TARGET_PLATFORM) {
+  // Split by comma if multiple platforms are specified
+  const targetPlatforms = TARGET_PLATFORM.split(',').map(p => p.trim());
+  
+  // Filter platforms
+  PLATFORMS = ALL_PLATFORMS.filter(platform => 
+    targetPlatforms.includes(platform.name)
+  );
+  
+  // Log selected platforms
+  if (PLATFORMS.length === 0) {
+    console.warn(`Warning: No valid platforms found for TARGET_PLATFORM=${TARGET_PLATFORM}`);
+    console.warn('Valid platform names are: ' + ALL_PLATFORMS.map(p => p.name).join(', '));
+    console.warn('Building for all platforms instead.');
+    PLATFORMS = ALL_PLATFORMS;
+  } else {
+    console.log(`Building for platforms: ${PLATFORMS.map(p => p.displayName).join(', ')}`);
+  }
+} else {
+  console.log('TARGET_PLATFORM environment variable not set. Building for all platforms.');
+}
 
 // Directories
 const BUILD_DIR = path.resolve('./build');
@@ -171,14 +199,74 @@ async function createExecutables() {
         ensureDir(packageDir);
         await copyDir(BUILD_DIR, packageDir);
       } else if (platform.name.startsWith('osx')) {
-        // For macOS, copy files to nwjs.app/Contents/Resources/app.nw
-        const appDir = path.join(platformOutputDir, 'nwjs.app', 'Contents', 'Resources', 'app.nw');
-        ensureDir(appDir);
-        await copyDir(BUILD_DIR, appDir);
-        
-        // Rename the app
+        // For macOS, handle app packaging with idempotency
         const appName = 'NW.js Image Viewer';
-        await execAsync(`mv "${path.join(platformOutputDir, 'nwjs.app')}" "${path.join(platformOutputDir, `${appName}.app`)}"`);
+        const sourceApp = path.join(platformOutputDir, 'nwjs.app');
+        const targetApp = path.join(platformOutputDir, `${appName}.app`);
+        
+        // Check if target app already exists and remove it if necessary
+        if (fs.existsSync(targetApp)) {
+          console.log(`Target app already exists. Removing ${targetApp}...`);
+          await execAsync(`rm -rf "${targetApp}"`);
+        }
+        
+        // Check if source app exists
+        if (fs.existsSync(sourceApp)) {
+          // Copy files to nwjs.app/Contents/Resources/app.nw
+          const appDir = path.join(sourceApp, 'Contents', 'Resources', 'app.nw');
+          ensureDir(appDir);
+          await copyDir(BUILD_DIR, appDir);
+          
+          // Rename the app
+          console.log(`Renaming app to ${appName}.app...`);
+          await execAsync(`mv "${sourceApp}" "${targetApp}"`);
+        } else if (!fs.existsSync(targetApp)) {
+          // Neither source nor target exists, extract again
+          console.log('Source app not found. Re-extracting NW.js...');
+          
+          // Re-extract NW.js
+          const nwjsFileName = path.basename(platform.url);
+          const nwjsFilePath = path.join(CACHE_DIR, nwjsFileName);
+          const extractDir = path.join(CACHE_DIR, `nwjs-${platform.name}`);
+          
+          // Clear extract directory and re-extract
+          await execAsync(`rm -rf "${extractDir}"`);
+          ensureDir(extractDir);
+          
+          if (nwjsFileName.endsWith('.zip')) {
+            await extractZip(nwjsFilePath, extractDir);
+          } else if (nwjsFileName.endsWith('.tar.gz')) {
+            await extractTarGz(nwjsFilePath, extractDir);
+          }
+          
+          // Find the extracted NW.js directory
+          const nwjsDirName = fs.readdirSync(extractDir).find(name => name.startsWith('nwjs'));
+          if (!nwjsDirName) {
+            throw new Error(`Could not find NW.js directory in ${extractDir}`);
+          }
+          
+          const nwjsDir = path.join(extractDir, nwjsDirName);
+          
+          // Copy NW.js to output directory
+          await copyDir(nwjsDir, platformOutputDir);
+          
+          // Now continue with app packaging
+          const appDir = path.join(sourceApp, 'Contents', 'Resources', 'app.nw');
+          ensureDir(appDir);
+          await copyDir(BUILD_DIR, appDir);
+          
+          // Rename the app
+          console.log(`Renaming app to ${appName}.app...`);
+          await execAsync(`mv "${sourceApp}" "${targetApp}"`);
+        } else {
+          // Target app already exists but source doesn't
+          console.log(`${appName}.app already exists. Updating application files...`);
+          
+          // Update app files
+          const appDir = path.join(targetApp, 'Contents', 'Resources', 'app.nw');
+          ensureDir(appDir);
+          await copyDir(BUILD_DIR, appDir);
+        }
       } else {
         // For Linux, create a package.nw directory
         const packageDir = path.join(platformOutputDir, 'package.nw');
