@@ -17,6 +17,7 @@ function App() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [thumbnailSize, setThumbnailSize] = useState(() => {
     // localStorageから前回のサムネイルサイズを取得
     const savedSize = localStorage.getItem('thumbnailSize');
@@ -169,6 +170,34 @@ function App() {
     setSelectedImage(image);
   }, []);
 
+  // 画像選択処理
+  const handleImageSelect = useCallback((image) => {
+    setSelectedImages(prevSelected => {
+      // 既に選択されている場合は選択解除
+      if (prevSelected.some(img => img.path === image.path)) {
+        return prevSelected.filter(img => img.path !== image.path);
+      }
+      // 選択されていない場合で3枚未満なら追加
+      else if (prevSelected.length < 3) {
+        return [...prevSelected, image];
+      }
+      // 既に3枚選択されている場合は変更なし
+      return prevSelected;
+    });
+  }, []);
+
+  // 選択画像を閉じる処理
+  const handleCloseSelectedImage = useCallback((image) => {
+    setSelectedImages(prevSelected => 
+      prevSelected.filter(img => img.path !== image.path)
+    );
+  }, []);
+
+  // 画像が選択されているか確認
+  const isImageSelected = useCallback((image) => {
+    return selectedImages.some(img => img.path === image.path);
+  }, [selectedImages]);
+
   // ソートされた画像
   const sortedImages = useMemo(() => {
     if (images.length === 0) return [];
@@ -226,6 +255,11 @@ function App() {
         if (selectedImage && selectedImage.path === image.path) {
           setSelectedImage(null);
         }
+        
+        // 削除した画像が選択されていた場合、選択リストからも削除
+        setSelectedImages(prevSelected => 
+          prevSelected.filter(img => img.path !== image.path)
+        );
       }
     } catch (error) {
       console.error('Error deleting image:', error);
@@ -278,6 +312,8 @@ function App() {
             images={sortedImages} 
             onImageClick={handleImageClick}
             onImageDelete={handleImageDelete}
+            onImageSelect={handleImageSelect}
+            isImageSelected={isImageSelected}
             thumbnailSize={thumbnailSize}
             imagePosition={imagePosition}
           />
@@ -292,6 +328,27 @@ function App() {
           onPrev={handlePrevImage}
           onDelete={handleImageDelete}
         />
+      )}
+
+      {selectedImages.length > 0 && (
+        <div className="selected-images-container">
+          {selectedImages.map(image => (
+            <div key={image.path} className="selected-image-wrapper">
+              <img 
+                src={image.path} 
+                alt={image.name} 
+                className="selected-image"
+              />
+              <button 
+                className="close-selected-image" 
+                onClick={() => handleCloseSelectedImage(image)}
+                title="選択解除"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

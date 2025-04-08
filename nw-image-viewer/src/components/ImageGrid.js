@@ -1,7 +1,15 @@
 import React from 'react';
 import ImageThumbnail from './ImageThumbnail.js';
 
-const ImageGrid = ({ images, onImageClick, onImageDelete, thumbnailSize, imagePosition }) => {
+const ImageGrid = ({ 
+  images, 
+  onImageClick, 
+  onImageDelete, 
+  onImageSelect,
+  isImageSelected,
+  thumbnailSize, 
+  imagePosition 
+}) => {
   if (images.length === 0) {
     return (
       <div id="no-images">
@@ -22,6 +30,8 @@ const ImageGrid = ({ images, onImageClick, onImageDelete, thumbnailSize, imagePo
             image={image} 
             onClick={onImageClick}
             onDelete={onImageDelete}
+            onSelect={() => onImageSelect(image)}
+            isSelected={isImageSelected(image)}
             thumbnailSize={thumbnailSize}
             imagePosition={imagePosition}
           />

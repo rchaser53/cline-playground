@@ -1,6 +1,14 @@
 import React from 'react';
 
-const ImageThumbnail = ({ image, onClick, onDelete, thumbnailSize = 150, imagePosition = 'center' }) => {
+const ImageThumbnail = ({ 
+  image, 
+  onClick, 
+  onDelete, 
+  onSelect,
+  isSelected,
+  thumbnailSize = 150, 
+  imagePosition = 'center' 
+}) => {
   const thumbnailStyle = {
     width: '100%',
     height: `${thumbnailSize}px`,
@@ -26,8 +34,16 @@ const ImageThumbnail = ({ image, onClick, onDelete, thumbnailSize = 150, imagePo
     }
   };
 
+  // 選択ボタンのクリックイベントが親要素に伝播しないようにする
+  const handleSelectClick = (e) => {
+    e.stopPropagation();
+    if (onSelect) {
+      onSelect(image);
+    }
+  };
+
   return (
-    <div className="image-item">
+    <div className={`image-item ${isSelected ? 'selected' : ''}`}>
       <div className="thumbnail-container" onClick={() => onClick(image)}>
         <img 
           className="image-thumbnail" 
@@ -43,6 +59,13 @@ const ImageThumbnail = ({ image, onClick, onDelete, thumbnailSize = 150, imagePo
         title="削除"
       >
         ×
+      </button>
+      <button 
+        className="select-button" 
+        onClick={handleSelectClick}
+        title={isSelected ? "選択解除" : "選択"}
+      >
+        {isSelected ? '✓' : '□'}
       </button>
     </div>
   );
