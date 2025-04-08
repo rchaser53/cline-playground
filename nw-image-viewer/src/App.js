@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import './App.css';
 import ImageGrid from './components/ImageGrid.js';
 import ImageModal from './components/ImageModal.js';
+import Sidebar from './components/Sidebar.js';
 import SortControls from './components/SortControls.js';
 import SizeControls from './components/SizeControls.js';
 import PositionControls from './components/PositionControls.js';
@@ -18,6 +19,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [thumbnailSize, setThumbnailSize] = useState(() => {
     // localStorageから前回のサムネイルサイズを取得
     const savedSize = localStorage.getItem('thumbnailSize');
@@ -175,10 +177,17 @@ function App() {
     setSelectedImages(prevSelected => {
       // 既に選択されている場合は選択解除
       if (prevSelected.some(img => img.path === image.path)) {
-        return prevSelected.filter(img => img.path !== image.path);
+        const newSelected = prevSelected.filter(img => img.path !== image.path);
+        // 選択画像がなくなった場合はサイドバーを閉じる
+        if (newSelected.length === 0) {
+          setIsSidebarOpen(false);
+        }
+        return newSelected;
       }
       // 選択されていない場合で3枚未満なら追加
       else if (prevSelected.length < 3) {
+        // 選択画像が追加されたらサイドバーを開く
+        setIsSidebarOpen(true);
         return [...prevSelected, image];
       }
       // 既に3枚選択されている場合は変更なし
@@ -188,9 +197,14 @@ function App() {
 
   // 選択画像を閉じる処理
   const handleCloseSelectedImage = useCallback((image) => {
-    setSelectedImages(prevSelected => 
-      prevSelected.filter(img => img.path !== image.path)
-    );
+    setSelectedImages(prevSelected => {
+      const newSelected = prevSelected.filter(img => img.path !== image.path);
+      // 選択画像がなくなった場合はサイドバーを閉じる
+      if (newSelected.length === 0) {
+        setIsSidebarOpen(false);
+      }
+      return newSelected;
+    });
   }, []);
 
   // 画像が選択されているか確認
@@ -268,88 +282,75 @@ function App() {
 
   return (
     <div className="App">
-      <header>
-        <h1>画像サムネイルビューア</h1>
-        <div className="controls">
-          <button onClick={handleSelectDirectory}>
-            ディレクトリを選択
-          </button>
-          {images.length > 0 && (
-            <div className="control-options">
-              <SortControls 
-                sortConfig={sortConfig}
-                onSortChange={handleSortChange}
-                onDirectionChange={handleDirectionChange}
-              />
-              <SizeControls
-                thumbnailSize={thumbnailSize}
-                onSizeChange={handleSizeChange}
-              />
-              <PositionControls
-                position={imagePosition}
-                onPositionChange={handlePositionChange}
-              />
+      <div className={`main-content ${isSidebarOpen ? 'with-sidebar' : ''}`}>
+        <header>
+          <h1>画像サムネイルビューア</h1>
+          <div className="controls">
+            <button onClick={handleSelectDirectory}>
+              ディレクトリを選択
+            </button>
+            {images.length > 0 && (
+              <div className="control-options">
+                <SortControls 
+                  sortConfig={sortConfig}
+                  onSortChange={handleSortChange}
+                  onDirectionChange={handleDirectionChange}
+                />
+                <SizeControls
+                  thumbnailSize={thumbnailSize}
+                  onSizeChange={handleSizeChange}
+                />
+                <PositionControls
+                  position={imagePosition}
+                  onPositionChange={handlePositionChange}
+                />
+              </div>
+            )}
+          </div>
+          {currentDirectory && (
+            <div id="current-directory">
+              選択されたディレクトリ: {currentDirectory}
             </div>
           )}
-        </div>
-        {currentDirectory && (
-          <div id="current-directory">
-            選択されたディレクトリ: {currentDirectory}
+          <div className="keyboard-shortcuts-help">
+            ショートカット: ⌘+T (上) / ⌘+C (中央) / ⌘+B (下)
           </div>
-        )}
-        <div className="keyboard-shortcuts-help">
-          ショートカット: ⌘+T (上) / ⌘+C (中央) / ⌘+B (下)
-        </div>
-      </header>
+        </header>
 
-      <main>
-        {loading ? (
-          <div id="loading">
-            <p>読み込み中...</p>
-          </div>
-        ) : (
-          <ImageGrid 
-            images={sortedImages} 
-            onImageClick={handleImageClick}
-            onImageDelete={handleImageDelete}
-            onImageSelect={handleImageSelect}
-            isImageSelected={isImageSelected}
-            thumbnailSize={thumbnailSize}
-            imagePosition={imagePosition}
+        <main>
+          {loading ? (
+            <div id="loading">
+              <p>読み込み中...</p>
+            </div>
+          ) : (
+            <ImageGrid 
+              images={sortedImages} 
+              onImageClick={handleImageClick}
+              onImageDelete={handleImageDelete}
+              onImageSelect={handleImageSelect}
+              isImageSelected={isImageSelected}
+              thumbnailSize={thumbnailSize}
+              imagePosition={imagePosition}
+            />
+          )}
+        </main>
+
+        {selectedImage && (
+          <ImageModal 
+            image={selectedImage} 
+            onClose={handleCloseModal}
+            onNext={handleNextImage}
+            onPrev={handlePrevImage}
+            onDelete={handleImageDelete}
           />
         )}
-      </main>
+      </div>
 
-      {selectedImage && (
-        <ImageModal 
-          image={selectedImage} 
-          onClose={handleCloseModal}
-          onNext={handleNextImage}
-          onPrev={handlePrevImage}
-          onDelete={handleImageDelete}
-        />
-      )}
-
-      {selectedImages.length > 0 && (
-        <div className="selected-images-container">
-          {selectedImages.map(image => (
-            <div key={image.path} className="selected-image-wrapper">
-              <img 
-                src={image.path} 
-                alt={image.name} 
-                className="selected-image"
-              />
-              <button 
-                className="close-selected-image" 
-                onClick={() => handleCloseSelectedImage(image)}
-                title="選択解除"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <Sidebar 
+        selectedImages={selectedImages}
+        onCloseImage={handleCloseSelectedImage}
+        isOpen={isSidebarOpen}
+      />
     </div>
   );
 }
