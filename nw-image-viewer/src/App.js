@@ -20,6 +20,7 @@ function App() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isViewingFromSidebar, setIsViewingFromSidebar] = useState(false);
   const [thumbnailSize, setThumbnailSize] = useState(() => {
     // localStorageから前回のサムネイルサイズを取得
     const savedSize = localStorage.getItem('thumbnailSize');
@@ -167,9 +168,39 @@ function App() {
     };
   }, []);
 
+  // 左右キーでの画像ナビゲーション
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (!selectedImage) return;
+      
+      switch (event.key) {
+        case 'ArrowRight':
+          handleNextImage();
+          break;
+        case 'ArrowLeft':
+          handlePrevImage();
+          break;
+        default:
+          return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedImage]);
+
   // 画像クリック処理
   const handleImageClick = useCallback((image) => {
     setSelectedImage(image);
+    setIsViewingFromSidebar(false);
+  }, []);
+
+  // サイドバーの画像クリック処理
+  const handleSidebarImageClick = useCallback((image) => {
+    setSelectedImage(image);
+    setIsViewingFromSidebar(true);
   }, []);
 
   // 画像選択処理
@@ -236,25 +267,53 @@ function App() {
 
   // 次の画像に移動
   const handleNextImage = useCallback(() => {
-    if (!selectedImage || sortedImages.length <= 1) return;
+    if (!selectedImage) return;
     
-    const currentIndex = sortedImages.findIndex(img => img.path === selectedImage.path);
-    if (currentIndex === -1) return;
-    
-    const nextIndex = (currentIndex + 1) % sortedImages.length;
-    setSelectedImage(sortedImages[nextIndex]);
-  }, [selectedImage, sortedImages]);
+    if (isViewingFromSidebar) {
+      // サイドバーから表示している場合は選択された画像間のみで移動
+      if (selectedImages.length <= 1) return;
+      
+      const currentIndex = selectedImages.findIndex(img => img.path === selectedImage.path);
+      if (currentIndex === -1) return;
+      
+      const nextIndex = (currentIndex + 1) % selectedImages.length;
+      setSelectedImage(selectedImages[nextIndex]);
+    } else {
+      // 通常の画像グリッドから表示している場合は全画像間で移動
+      if (sortedImages.length <= 1) return;
+      
+      const currentIndex = sortedImages.findIndex(img => img.path === selectedImage.path);
+      if (currentIndex === -1) return;
+      
+      const nextIndex = (currentIndex + 1) % sortedImages.length;
+      setSelectedImage(sortedImages[nextIndex]);
+    }
+  }, [selectedImage, sortedImages, selectedImages, isViewingFromSidebar]);
 
   // 前の画像に移動
   const handlePrevImage = useCallback(() => {
-    if (!selectedImage || sortedImages.length <= 1) return;
+    if (!selectedImage) return;
     
-    const currentIndex = sortedImages.findIndex(img => img.path === selectedImage.path);
-    if (currentIndex === -1) return;
-    
-    const prevIndex = (currentIndex - 1 + sortedImages.length) % sortedImages.length;
-    setSelectedImage(sortedImages[prevIndex]);
-  }, [selectedImage, sortedImages]);
+    if (isViewingFromSidebar) {
+      // サイドバーから表示している場合は選択された画像間のみで移動
+      if (selectedImages.length <= 1) return;
+      
+      const currentIndex = selectedImages.findIndex(img => img.path === selectedImage.path);
+      if (currentIndex === -1) return;
+      
+      const prevIndex = (currentIndex - 1 + selectedImages.length) % selectedImages.length;
+      setSelectedImage(selectedImages[prevIndex]);
+    } else {
+      // 通常の画像グリッドから表示している場合は全画像間で移動
+      if (sortedImages.length <= 1) return;
+      
+      const currentIndex = sortedImages.findIndex(img => img.path === selectedImage.path);
+      if (currentIndex === -1) return;
+      
+      const prevIndex = (currentIndex - 1 + sortedImages.length) % sortedImages.length;
+      setSelectedImage(sortedImages[prevIndex]);
+    }
+  }, [selectedImage, sortedImages, selectedImages, isViewingFromSidebar]);
 
   // 画像削除処理
   const handleImageDelete = useCallback(async (image) => {
@@ -349,6 +408,7 @@ function App() {
       <Sidebar 
         selectedImages={selectedImages}
         onCloseImage={handleCloseSelectedImage}
+        onImageClick={handleSidebarImageClick}
         isOpen={isSidebarOpen}
       />
     </div>

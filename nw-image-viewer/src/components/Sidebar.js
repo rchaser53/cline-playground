@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const Sidebar = ({ selectedImages, onCloseImage, isOpen }) => {
+const Sidebar = ({ selectedImages, onCloseImage, onImageClick, isOpen }) => {
   const [width, setWidth] = useState(300); // デフォルトの幅
   const sidebarRef = useRef(null);
   const resizeHandleRef = useRef(null);
@@ -54,12 +54,17 @@ const Sidebar = ({ selectedImages, onCloseImage, isOpen }) => {
         <div className="selected-images-list">
           {selectedImages.map(image => (
             <div key={image.path} className="selected-image-item">
-              <img 
-                src={image.path} 
-                alt={image.name} 
-                className="selected-image"
-              />
-              <div className="selected-image-name">{image.name}</div>
+              <div 
+                className="selected-image-container"
+                onClick={() => onImageClick(image)}
+              >
+                <img 
+                  src={image.path} 
+                  alt={image.name} 
+                  className="selected-image"
+                />
+                <div className="selected-image-name">{image.name}</div>
+              </div>
               <button 
                 className="close-selected-image" 
                 onClick={() => onCloseImage(image)}
